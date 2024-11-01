@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+Host my-server
+    HostName  172.20.10.2
+    User ubuntu
+    IdentityFile ~/.ssh/school
+    PasswordAuthentication no
