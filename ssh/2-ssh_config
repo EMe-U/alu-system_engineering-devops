@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-Host my-server
+Host 3a0fd2e2f4f1.15cf1724.alu-cod.online
     HostName  172.20.10.2
     User ubuntu
     IdentityFile ~/.ssh/school
