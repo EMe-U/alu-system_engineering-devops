@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# This script installs Nginx on an Ubuntu server and sets up a custom HTML page
 
 # Update package list and upgrade system
 sudo apt-get update -y
@@ -12,3 +13,4 @@ echo "Holberton School for the win!" | sudo tee /var/www/html/index.html
 
 # Restart Nginx using the service command (not systemctl)
 sudo service nginx restart
+
