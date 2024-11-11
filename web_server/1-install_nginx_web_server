@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
-# Install nginx web server
 
-apt-get update -y
-apt-get install nginx -y
-service nginx start
-echo "Holberton School for the win!" > /var/www/html/index.html
-service nginx restart
+# Update package list and upgrade system
+sudo apt-get update -y
+sudo apt-get upgrade -y
+
+# Install Nginx
+sudo apt-get install nginx -y
+
+# Create a custom HTML page
+echo "Holberton School for the win!" | sudo tee /var/www/html/index.html
+
+# Restart Nginx using the service command (not systemctl)
+sudo service nginx restart
