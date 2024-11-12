@@ -3,16 +3,14 @@
 # This script configures Nginx to set up a 301 redirection for /redirect_me
 
 # Update the package list and install Nginx
-sudo apt update
+sudo apt update -y
 sudo apt install -y nginx
 
 # Create a new Nginx configuration file for the redirection
 REDIRECT_CONF="/etc/nginx/sites-available/redirect_me"
 
-# Check if the configuration already exists
-if [ ! -f "$REDIRECT_CONF" ]; then
-    # Create the Nginx server block for redirection
-    sudo bash -c "cat > $REDIRECT_CONF" << EOF
+# Create the Nginx server block for redirection
+sudo bash -c "cat > $REDIRECT_CONF" << EOF
 server {
     listen 80;
     server_name _;
@@ -22,19 +20,28 @@ server {
     }
 }
 EOF
-fi
 
-# Enable the new configuration
-sudo ln -sf /etc/nginx/sites-available/redirect_me /etc/nginx/sites-enabled/
+# Enable the new configuration by creating a symlink
+sudo ln -sf /etc/nginx/sites-available/redirect_me /etc/nginx/sites-enabled/redirect_me
 
-# Remove the default Nginx site if needed
+# Remove the default Nginx site configuration if it exists
 sudo rm -f /etc/nginx/sites-enabled/default
 
-# Restart Nginx to apply changes
+# Test Nginx configuration for syntax errors
+sudo nginx -t
+
+# Restart Nginx to apply the new configuration
 sudo systemctl restart nginx
 
-# Ensure Nginx is enabled to start on boot
+# Ensure Nginx starts on boot
 sudo systemctl enable nginx
 
-echo "Redirection configured. Access http://<your-server-ip>/redirect_me to test it."
+# Confirm the redirection is set up correctly
+REDIRECT_TEST=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/redirect_me)
 
+# Check if the redirection is working correctly
+if [ "$REDIRECT_TEST" -eq 301 ]; then
+    echo "Redirection configured successfully with status code: 301"
+else
+    echo "Failed to set up redirection. Got status code: $REDIRECT_TEST"
+fi
