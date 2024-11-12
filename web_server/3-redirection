@@ -9,7 +9,7 @@ sudo apt install -y nginx
 # Create a new Nginx configuration file for the redirection
 REDIRECT_CONF="/etc/nginx/sites-available/redirect_me"
 
-# Create the Nginx server block for redirection
+# Write the Nginx server block configuration
 sudo bash -c "cat > $REDIRECT_CONF" << EOF
 server {
     listen 80;
@@ -21,8 +21,8 @@ server {
 }
 EOF
 
-# Enable the new configuration by creating a symlink
-sudo ln -sf /etc/nginx/sites-available/redirect_me /etc/nginx/sites-enabled/redirect_me
+# Enable the new configuration by creating a symbolic link
+sudo ln -sf /etc/nginx/sites-available/redirect_me /etc/nginx/sites-enabled/
 
 # Remove the default Nginx site configuration if it exists
 sudo rm -f /etc/nginx/sites-enabled/default
@@ -30,18 +30,22 @@ sudo rm -f /etc/nginx/sites-enabled/default
 # Test Nginx configuration for syntax errors
 sudo nginx -t
 
-# Restart Nginx to apply the new configuration
-sudo systemctl restart nginx
+# Reload Nginx to apply the new configuration
+sudo systemctl reload nginx
 
 # Ensure Nginx starts on boot
 sudo systemctl enable nginx
 
-# Confirm the redirection is set up correctly
-REDIRECT_TEST=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/redirect_me)
+# Wait a few seconds to let Nginx apply the configuration
+sleep 3
 
-# Check if the redirection is working correctly
-if [ "$REDIRECT_TEST" -eq 301 ]; then
-    echo "Redirection configured successfully with status code: 301"
+# Test if the redirection works and print the HTTP status code
+HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://localhost/redirect_me)
+
+# Check if the HTTP status code is 301
+if [ "$HTTP_STATUS" -eq 301 ]; then
+    echo "Redirection configured successfully with status code: $HTTP_STATUS"
 else
-    echo "Failed to set up redirection. Got status code: $REDIRECT_TEST"
+    echo "Error: Expected 301 but got $HTTP_STATUS"
+    exit 1
 fi
