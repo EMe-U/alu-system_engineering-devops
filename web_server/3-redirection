@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+#
+# This script configures Nginx to set up a 301 redirection for /redirect_me
 
 # Update the package list and install Nginx
 sudo apt update
@@ -11,9 +13,17 @@ REDIRECT_CONF="/etc/nginx/sites-available/redirect_me"
 if [ ! -f "$REDIRECT_CONF" ]; then
     # Create the Nginx server block for redirection
     sudo bash -c "cat > $REDIRECT_CONF" << EOF
-location /redirect_me {
-    return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+server {
+    listen 80;
+    server_name _;
+
+    location /redirect_me {
+        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+    }
 }
+EOF
+fi
+
 # Enable the new configuration
 sudo ln -sf /etc/nginx/sites-available/redirect_me /etc/nginx/sites-enabled/
 
@@ -27,4 +37,4 @@ sudo systemctl restart nginx
 sudo systemctl enable nginx
 
 echo "Redirection configured. Access http://<your-server-ip>/redirect_me to test it."
-```
+
