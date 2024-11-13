@@ -16,7 +16,7 @@ REDIRECT_CONF="/etc/nginx/sites-available/redirect_me"
 cat > $REDIRECT_CONF << EOF
 server {
     listen 80;
-    server_name _;
+    server_name _;  # Use localhost or domain if specific
 
     # Configure the redirection
     location = /redirect_me {
@@ -45,9 +45,16 @@ sleep 2
 # Step 8: Test if the redirection works
 REDIRECT_STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://localhost/redirect_me)
 
-# Step 9: Check if the status code is 301
+# Step 9: Check if the status code is 301 and the Location header matches the redirection URL
 if [ "$REDIRECT_STATUS" -eq 301 ]; then
-    echo "Redirection configured successfully with status code: $REDIRECT_STATUS"
+    REDIRECT_LOCATION=$(curl -sI http://localhost/redirect_me | grep -i "Location:" | awk '{print $2}' | tr -d '\r')
+    
+    if [ "$REDIRECT_LOCATION" == "https://www.youtube.com/watch?v=QH2-TGUlwu4" ]; then
+        echo "Redirection configured successfully with status code: $REDIRECT_STATUS"
+    else
+        echo "Error: Redirection URL mismatch. Expected: https://www.youtube.com/watch?v=QH2-TGUlwu4 but got $REDIRECT_LOCATION"
+        exit 1
+    fi
 else
     echo "Error: Expected 301 but got $REDIRECT_STATUS"
     exit 1
