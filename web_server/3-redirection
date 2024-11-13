@@ -2,14 +2,17 @@
 #
 # This script installs Nginx and sets up a 301 redirection from /redirect_me
 
-# Update package list and install Nginx
+# Step 1: Update package list and install Nginx
 apt update -y
 apt install -y nginx
 
-# Create a new Nginx configuration file for redirection
+# Step 2: Remove any existing default Nginx configuration to avoid conflicts
+rm -f /etc/nginx/sites-enabled/default
+rm -f /etc/nginx/sites-available/default
+
+# Step 3: Create a new Nginx configuration file for redirection
 REDIRECT_CONF="/etc/nginx/sites-available/redirect_me"
 
-# Write the redirection configuration
 cat > $REDIRECT_CONF << EOF
 server {
     listen 80;
@@ -19,28 +22,30 @@ server {
     location = /redirect_me {
         return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
     }
+
+    # Catch-all location to avoid 404 for other paths
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
 }
 EOF
 
-# Enable the new configuration by creating a symbolic link
+# Step 4: Enable the new configuration by creating a symbolic link
 ln -sf /etc/nginx/sites-available/redirect_me /etc/nginx/sites-enabled/redirect_me
 
-# Remove the default Nginx site configuration if it exists
-rm -f /etc/nginx/sites-enabled/default
-
-# Test Nginx configuration for syntax errors
+# Step 5: Test Nginx configuration for syntax errors
 nginx -t
 
-# Restart Nginx to apply changes
+# Step 6: Restart Nginx to apply changes
 service nginx restart
 
-# Wait a few seconds to ensure Nginx has fully reloaded
-sleep 3
+# Step 7: Wait a few seconds to ensure Nginx has fully reloaded
+sleep 2
 
-# Test if the redirection works
+# Step 8: Test if the redirection works
 REDIRECT_STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://localhost/redirect_me)
 
-# Check if the status code is 301
+# Step 9: Check if the status code is 301
 if [ "$REDIRECT_STATUS" -eq 301 ]; then
     echo "Redirection configured successfully with status code: $REDIRECT_STATUS"
 else
