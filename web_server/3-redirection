@@ -7,6 +7,7 @@ sudo apt install nginx -y
 
 sudo mkdir /etc/nginx/html
 sudo touch /etc/nginx/html/index.html
+sudo rm -f /etc/nginx/sites-enabled/default
 # store configuration content
 new_config=\
 "server {
@@ -24,5 +25,7 @@ new_config=\
 }
 "
 echo "$new_config" > /etc/nginx/sites-available/default
+sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
+sudo nginx -t
 sudo service nginx restart
 curl -sI http://localhost/redirect_me
