@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script installs Nginx and sets up a 301 redirection
+# This script installs Nginx and sets up a 301 redirection from /redirect_me
 
 # Update package list and install Nginx
 apt update -y
@@ -9,20 +9,21 @@ apt install -y nginx
 # Create a new Nginx configuration file for redirection
 REDIRECT_CONF="/etc/nginx/sites-available/redirect_me"
 
+# Write the redirection configuration
 cat > $REDIRECT_CONF << EOF
 server {
     listen 80;
     server_name _;
 
     # Configure the redirection
-    location /redirect_me {
+    location = /redirect_me {
         return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
     }
 }
 EOF
 
-# Enable the new configuration
-ln -sf /etc/nginx/sites-available/redirect_me /etc/nginx/sites-enabled/
+# Enable the new configuration by creating a symbolic link
+ln -sf /etc/nginx/sites-available/redirect_me /etc/nginx/sites-enabled/redirect_me
 
 # Remove the default Nginx site configuration if it exists
 rm -f /etc/nginx/sites-enabled/default
@@ -33,7 +34,7 @@ nginx -t
 # Restart Nginx to apply changes
 service nginx restart
 
-# Wait for a few seconds to let Nginx reload completely
+# Wait a few seconds to ensure Nginx has fully reloaded
 sleep 3
 
 # Test if the redirection works
