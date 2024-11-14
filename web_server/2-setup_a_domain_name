@@ -1,8 +1,1 @@
-#!/usr/bin/env bash
-
-# This script configures the server with the domain name emerance1.tech
-
-DOMAIN_NAME="emerance1.tech"
-
-# Your configuration commands using $DOMAIN_NAME
-
+emerance1.tech
