@@ -2,18 +2,19 @@
 #
 # This script configures Nginx to serve a custom 404 error page
 
-# Update the package list and install Nginx
-sudo apt update -y
-sudo apt install -y nginx
+# Update package list and install Nginx
+apt update -y
+apt install -y nginx
 
 # Create a custom 404 error page
-sudo mkdir -p /var/www/html
-echo "Ceci n'est pas une page" | sudo tee /var/www/html/custom_404.html
+CUSTOM_404_PAGE="/var/www/html/custom_404.html"
+mkdir -p /var/www/html
+echo "Ceci n'est pas une page" > $CUSTOM_404_PAGE
 
-# Create a new Nginx configuration file to serve the custom 404 page
+# Create a new Nginx configuration file for the custom 404 page
 ERROR_CONF="/etc/nginx/sites-available/custom_404"
 
-sudo bash -c "cat > $ERROR_CONF" << EOF
+cat > $ERROR_CONF << EOF
 server {
     listen 80;
     server_name _;
@@ -21,9 +22,10 @@ server {
     # Set the root directory for your website
     root /var/www/html;
 
-    # Custom 404 page configuration
+    # Serve the custom 404 page for all not found requests
     error_page 404 /custom_404.html;
-    location = /custom_404.html {
+
+    location /custom_404.html {
         internal;
     }
 
@@ -33,32 +35,32 @@ server {
 }
 EOF
 
-# Enable the new configuration by creating a symbolic link
-sudo ln -sf /etc/nginx/sites-available/custom_404 /etc/nginx/sites-enabled/
+# Enable the new configuration
+ln -sf /etc/nginx/sites-available/custom_404 /etc/nginx/sites-enabled/
 
 # Remove the default Nginx site configuration if it exists
-sudo rm -f /etc/nginx/sites-enabled/default
+rm -f /etc/nginx/sites-enabled/default
 
 # Test Nginx configuration for syntax errors
-sudo nginx -t
+nginx -t
 
-# Reload Nginx to apply the new configuration
-sudo systemctl reload nginx
+# Restart Nginx to apply the new configuration
+service nginx restart
 
-# Ensure Nginx starts on boot
-sudo systemctl enable nginx
-
-# Wait a few seconds to let Nginx apply the configuration
+# Wait a moment for Nginx to fully reload
 sleep 3
 
 # Test if the custom 404 page is working
-HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://localhost/xyz)
-CUSTOM_PAGE_CONTENT=$(curl -s http://localhost/xyz)
+TEST_URL="http://localhost/xyz"
+HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" $TEST_URL)
+CUSTOM_PAGE_CONTENT=$(curl -s $TEST_URL)
 
-# Check if the status code is 404 and the content is correct
+# Check if the status code is 404 and the content matches
 if [ "$HTTP_STATUS" -eq 404 ] && [[ "$CUSTOM_PAGE_CONTENT" == "Ceci n'est pas une page" ]]; then
-    echo "Custom 404 page configured successfully."
+    echo "Custom 404 page configured successfully with content: '$CUSTOM_PAGE_CONTENT'"
 else
     echo "Error: Custom 404 page configuration failed."
+    echo "Status Code: $HTTP_STATUS"
+    echo "Content: $CUSTOM_PAGE_CONTENT"
     exit 1
 fi

@@ -1,51 +1,31 @@
 #!/usr/bin/env bash
-#
-# This script configures Nginx to set up a 301 redirection for /redirect_me
-
-# Update the package list and install Nginx
+# This script configures Nginx to redirect /redirect_me to a YouTube video with a 301 status code.
+# script that install nginx and configure it to redirect to another page when
+# accessing the /redirect_me page.
 sudo apt update -y
-sudo apt install -y nginx
+sudo apt install nginx -y
 
-# Create a new Nginx configuration file for the redirection
-REDIRECT_CONF="/etc/nginx/sites-available/redirect_me"
-
-# Write the Nginx server block configuration
-sudo bash -c "cat > $REDIRECT_CONF" << EOF
-server {
-    listen 80;
-    server_name _;
-
-    location /redirect_me {
-        return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
-    }
-}
-EOF
-
-# Enable the new configuration by creating a symbolic link
-sudo ln -sf /etc/nginx/sites-available/redirect_me /etc/nginx/sites-enabled/
-
-# Remove the default Nginx site configuration if it exists
+sudo mkdir /etc/nginx/html
+sudo touch /etc/nginx/html/index.html
 sudo rm -f /etc/nginx/sites-enabled/default
-
-# Test Nginx configuration for syntax errors
+# store configuration content
+new_config=\
+"server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+               root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+        server_name _;
+        location / {
+                try_files \$uri \$uri/ =404;
+        }
+        location /redirect_me { 
+            return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
+        }
+}
+"
+echo "$new_config" > /etc/nginx/sites-available/default
+sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
 sudo nginx -t
-
-# Reload Nginx to apply the new configuration
-sudo systemctl reload nginx
-
-# Ensure Nginx starts on boot
-sudo systemctl enable nginx
-
-# Wait a few seconds to let Nginx apply the configuration
-sleep 3
-
-# Test if the redirection works and print the HTTP status code
-HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://localhost/redirect_me)
-
-# Check if the HTTP status code is 301
-if [ "$HTTP_STATUS" -eq 301 ]; then
-    echo "Redirection configured successfully with status code: $HTTP_STATUS"
-else
-    echo "Error: Expected 301 but got $HTTP_STATUS"
-    exit 1
-fi
+sudo service nginx restart
+curl -sI http://localhost/redirect_me
