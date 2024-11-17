@@ -7,7 +7,7 @@ sudo apt-get update
 sudo apt-get install -y nginx
 
 # Create a new Nginx configuration file
-sudo bash -c 'cat << EOF > /etc/nginx/sites-available/default
+sudo bash -c "cat << EOF > /etc/nginx/sites-available/default
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
@@ -24,8 +24,10 @@ server {
     location /redirect_me {
         return 301 https://www.youtube.com/watch?v=QH2-TGUlwu4;
     }
+
+    add_header X-Served-By 6291-web-01;
 }
-EOF'
+EOF"
 
 # Test Nginx configuration
 sudo nginx -t
